@@ -8,52 +8,55 @@ const mongoose = require("mongoose");
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@cluster0.p45io4t.mongodb.net/?retryWrites=true&w=majority`;
+// MongoDB Atlas connection
+const MONGO_URI = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@cluster0.p45io4t.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-async function run() {
-  try {
-    const storeHouse = client.db("HouseHunter").collection("House");
+mongoose.connection.once("open", () => {
+  console.log("Connected to MongoDB!");
 
-    app.get("/api/houses", async (req, res) => {
-      const page = parseInt(req.query.page) || 1;
-      const perPage = 10;
-      const totalHouses = await storeHouse.countDocuments();
-      const skip = (page - 1) * perPage;
-      const houses = await storeHouse
-        .find()
-        .skip(skip)
-        .limit(perPage)
-        .toArray();
-      res.json({
-        houses,
-        currentPage: page,
-        totalPages: Math.ceil(totalHouses / perPage),
-      });
+  const database = mongoose.connection.db;
+  const storeHouse = database.collection("houses");
+
+
+
+  app.get("/houses", async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = 10;
+    const totalHouses = await storeHouse.countDocuments();
+    console.log(totalHouses)
+    const skip = (page - 1) * perPage;
+    const houses = await storeHouse
+      .find()
+      .skip(skip)
+      .limit(perPage)
+      .toArray();
+    res.json({
+      houses,
+      currentPage: page,
+      totalPages: Math.ceil(totalHouses / perPage),
     });
+  });
 
+  app.post("/house" , async (req , res) =>{
+    const houseData = req.body 
+    const result = await storeHouse.insertOne(houseData)
+    res.send(result)
+  })
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-  }
-}
-run().catch(console.dir);
+  console.log("Ready to serve requests!");
+}).on("error", (err) => {
+  console.error("Error connecting to MongoDB:", err);
+});
 
 app.get("/", (req, res) => {
   res.send("Hello World! House Hunting Start ");
 });
 
 app.listen(port, () => {
-  console.log(` listening on port ${port}`);
+  console.log(`Listening on port ${port}`);
 });
