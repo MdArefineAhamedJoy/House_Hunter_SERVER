@@ -8,6 +8,7 @@ const connection = require("./db");
 
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
+const { ObjectId } = require("mongodb");
 
 connection();
 
@@ -28,8 +29,6 @@ mongoose.connect(MONGO_URI, {
 
 mongoose.connection
   .once("open", () => {
-    console.log("Connected to MongoDB!");
-
     const database = mongoose.connection.db;
     const storeHouse = database.collection("houses");
     const storeUser = database.collection("users");
@@ -41,11 +40,26 @@ mongoose.connection
       res.send(result);
     });
 
+    app.post("/houses", async (req, res) => {
+      const houseData = req.body;
+      const result = await storeHouse.insertOne(houseData);
+      res.send(result);
+    });
+
+    app.get("/booking/:id" , async(req , res)=>{
+      // const id = req.params.id 
+      const id = req.params.id ;
+      console.log()
+      const query = {_id : new ObjectId(id)}
+      const result = await storeHouse.findOne(query)
+      console.log(result )
+      res.send(result)
+    })
+
     app.get("/houses", async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const perPage = 10;
       const totalHouses = await storeHouse.countDocuments();
-      console.log(totalHouses);
       const skip = (page - 1) * perPage;
       const houses = await storeHouse
         .find()
@@ -68,7 +82,6 @@ mongoose.connection
 
   app.get("/users/:text", async (req, res) =>{
     const email = req.params.text
-    console.log(email)
     const query = {email  :  email  };
     const houses = await storeUser.findOne(query)
     res.send(houses)
