@@ -32,7 +32,7 @@ mongoose.connection
     const database = mongoose.connection.db;
     const storeHouse = database.collection("houses");
     const storeUser = database.collection("users");
-
+    const bookingUser = database.collection("bookingHouse");
 
     app.post("/house", async (req, res) => {
       const houseData = req.body;
@@ -40,21 +40,27 @@ mongoose.connection
       res.send(result);
     });
 
-    app.post("/houses", async (req, res) => {
-      const houseData = req.body;
-      const result = await storeHouse.insertOne(houseData);
+    app.post("/house/booking", async (req, res) => {
+      const bookingData = req.body;
+      console.log(bookingData);
+      const result = await bookingUser.insertOne(bookingData);
       res.send(result);
     });
 
-    app.get("/booking/:id" , async(req , res)=>{
-      // const id = req.params.id 
-      const id = req.params.id ;
-      console.log()
-      const query = {_id : new ObjectId(id)}
-      const result = await storeHouse.findOne(query)
-      console.log(result )
-      res.send(result)
-    })
+    app.get("/house/booking", async (req, res) => {
+      const result = await bookingUser.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/booking/:id", async (req, res) => {
+      // const id = req.params.id
+      const id = req.params.id;
+      console.log();
+      const query = { _id: new ObjectId(id) };
+      const result = await storeHouse.findOne(query);
+      console.log(result);
+      res.send(result);
+    });
 
     app.get("/houses", async (req, res) => {
       const page = parseInt(req.query.page) || 1;
@@ -73,23 +79,23 @@ mongoose.connection
       });
     });
 
-    app.get('/all/house/:email' , async(req , res) => {
-      const searchEmail = req.params.email
-      const query = {email  :  searchEmail };
-      const houses = await storeHouse.find(query).toArray()
-      res.send(houses)
-    })
+    app.get("/all/house/:email", async (req, res) => {
+      const searchEmail = req.params.email;
+      const query = { email: searchEmail };
+      const houses = await storeHouse.find(query).toArray();
+      res.send(houses);
+    });
 
-  app.get("/users/:text", async (req, res) =>{
-    const email = req.params.text
-    const query = {email  :  email  };
-    const houses = await storeUser.findOne(query)
-    res.send(houses)
-  })
+    app.get("/users/:text", async (req, res) => {
+      const email = req.params.text;
+      const query = { email: email };
+      const houses = await storeUser.findOne(query);
+      res.send(houses);
+    });
 
-
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   })
   .on("error", (err) => {
     console.error("Error connecting to MongoDB:", err);
