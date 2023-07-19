@@ -32,6 +32,14 @@ mongoose.connection
 
     const database = mongoose.connection.db;
     const storeHouse = database.collection("houses");
+    const storeUser = database.collection("users");
+
+
+    app.post("/house", async (req, res) => {
+      const houseData = req.body;
+      const result = await storeHouse.insertOne(houseData);
+      res.send(result);
+    });
 
     app.get("/houses", async (req, res) => {
       const page = parseInt(req.query.page) || 1;
@@ -51,11 +59,21 @@ mongoose.connection
       });
     });
 
-    app.post("/house", async (req, res) => {
-      const houseData = req.body;
-      const result = await storeHouse.insertOne(houseData);
-      res.send(result);
-    });
+    app.get('/all/house/:email' , async(req , res) => {
+      const searchEmail = req.params.email
+      const query = {email  :  searchEmail };
+      const houses = await storeHouse.find(query).toArray()
+      res.send(houses)
+    })
+
+  app.get("/users/:text", async (req, res) =>{
+    const email = req.params.text
+    console.log(email)
+    const query = {email  :  email  };
+    const houses = await storeUser.findOne(query)
+    res.send(houses)
+  })
+
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
